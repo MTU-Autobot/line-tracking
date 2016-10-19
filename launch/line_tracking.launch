@@ -1,0 +1,3 @@
+<launch>
+  <node name="line_tracking" pkg="line_tracking" type="line_tracking" />
+</launch>
