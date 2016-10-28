@@ -106,10 +106,10 @@ public:
 	
 		// The 4 points that select quadilateral on the input , from top-left in clockwise order
 		// These four pts are the sides of the rect box used as input 
-		inputQuad[0] = Point2f( 175,0 );
-		inputQuad[1] = Point2f( 465,0);
-		inputQuad[2] = Point2f( 1300,480);
-		inputQuad[3] = Point2f( -660,480);  
+		inputQuad[0] = Point2f( 100,360 );
+		inputQuad[1] = Point2f( 1180,360);
+		inputQuad[2] = Point2f( 1940,720);
+		inputQuad[3] = Point2f( -660,720);  
 		// The 4 points where the mapping is to be done , from top-left in clockwise order
 		outputQuad[0] = Point2f( 0,0 );
 		outputQuad[1] = Point2f( frame.cols,0);
