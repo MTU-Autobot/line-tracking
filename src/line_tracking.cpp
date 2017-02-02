@@ -100,33 +100,33 @@ public:
 		Point2f outputQuad[4];
 
 		// Lambda Matrix
-		Mat lambda( 2, 4, CV_32FC1 );
+		Mat lambda(2, 4, CV_32FC1);
 
 		// Set the lambda matrix the same type and size as input
-		lambda = Mat::zeros( frame.rows, frame.cols, frame.type() );
+		lambda = Mat::zeros(frame.rows, frame.cols, frame.type());
 
 		// The 4 points that select quadilateral on the input , from top-left in clockwise order
 		// These four pts are the sides of the rect box used as input
-		inputQuad[0] = Point2f( 100,360 );
-		inputQuad[1] = Point2f( 1180,360);
-		inputQuad[2] = Point2f( 1940,720);
-		inputQuad[3] = Point2f( -660,720);
+		inputQuad[0] = Point2f(100, 360);
+		inputQuad[1] = Point2f(1180, 360);
+		inputQuad[2] = Point2f(1940, 720);
+		inputQuad[3] = Point2f(-660, 720);
 		// The 4 points where the mapping is to be done , from top-left in clockwise order
-		outputQuad[0] = Point2f( 0,0 );
-		outputQuad[1] = Point2f( frame.cols,0);
-		outputQuad[2] = Point2f( frame.cols,frame.rows);
-		outputQuad[3] = Point2f( 0,frame.rows  );
+		outputQuad[0] = Point2f(0, 0);
+		outputQuad[1] = Point2f(frame.cols, 0);
+		outputQuad[2] = Point2f(frame.cols, frame.rows);
+		outputQuad[3] = Point2f(0, frame.rows);
 
 		// Get the Perspective Transform Matrix i.e. lambda
-		lambda = getPerspectiveTransform( inputQuad, outputQuad );
+		lambda = getPerspectiveTransform(inputQuad, outputQuad);
 		// Apply the Perspective Transform just found to the src image
-		warpPerspective(frame,output,lambda,output.size() );
+		warpPerspective(frame, output, lambda, output.size());
 
 		//**Discovery Phase
 		//Convert the frame to different kinds of Mats
 		cvtColor(output, HSV, COLOR_BGR2HSV);
 		inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshld);
-		inRange(HSV, Scalar(0,0,0), Scalar(0,0,0), Hough);
+		inRange(HSV, Scalar(0, 0, 0), Scalar(0, 0, 0), Hough);
 		morphOps(threshld);
 
 		//Detect Edges
@@ -136,11 +136,11 @@ public:
 		cvtColor(Can, ctv, CV_GRAY2BGR);
 
 		//Detect lines
-		HoughLinesP(Can, lines, 1, CV_PI/180, 50, 20, 10 );
+		HoughLinesP(Can, lines, 1, CV_PI/180, 50, 20, 10);
 
 		//**Data conversion phase
 		//Begin writing point stream
-		////pointStream.setStreamLength( 2*lines.size() );
+		////pointStream.setStreamLength(2 * lines.size());
 		//PointCloud::Ptr cloud (new PointCloud);
 		//cloud->header.frame_id = "some_tf_frame";
 		pcl::PointCloud<pcl::PointXYZRGB> point_cloud;
@@ -197,7 +197,7 @@ public:
 		output.is_bigendian = false;
 		output.is_dense = false;
 		pub_cloud.publish(output);
-		////polysync::message::publish( pointStream );
+		////polysync::message::publish(pointStream);
 		//cloud->header.stamp = ros::Time::now().toNSec();
 		//pub.publish (cloud);
 		//Wait for a second before we repeat
@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
 	//VideoCapture webcam << ic.getImage();
 
 	//Initialize and connect to PolySync.
-	////polysync::Node node( "CameraRPublisher" );
+	////polysync::Node node("CameraRPublisher");
 
 	//Loop until we get a ctrl-c
 
