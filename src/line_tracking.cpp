@@ -42,23 +42,6 @@ void intHandler(int dummy) {
 	keepRunning = 0;
 }
 
-void morphOps(Mat &thresh) {
-	//create structuring element that will be used to "dilate" and "erode" image.
-	//the element chosen here is a 3px by 3px rectangle
-
-	Mat erodeElement = getStructuringElement(MORPH_RECT, Size(2, 2));
-	//dilate with larger element so make sure object is nicely visible
-	Mat dilateElement = getStructuringElement(MORPH_RECT, Size(3, 3));
-
-	//Erode the image
-	//erode(thresh, thresh, erodeElement);
-	//erode(thresh, thresh, erodeElement);
-
-	//Dilate the image
-	dilate(thresh, thresh, dilateElement);
-	dilate(thresh, thresh, dilateElement);
-}
-
 class ImageConverter {
 	ros::NodeHandle nh_;
 	image_transport::ImageTransport it_;
