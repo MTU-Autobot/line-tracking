@@ -1,3 +1,4 @@
 <launch>
-  <node name="line_tracking" pkg="line_tracking" type="line_tracking" output="screen" />
+    <node pkg="tf" type="static_transform_publisher" name="line_tracking" args="0.1 0 0 0 0 0 /map /camera 100" />
+    <node name="line_tracking" pkg="line_tracking" type="line_tracking" output="screen" />
 </launch>
