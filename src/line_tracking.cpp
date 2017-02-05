@@ -53,8 +53,9 @@ class ImageConverter {
 public:
 	ImageConverter():it_(nh_) {
 		// Subscrive to input video feed and publish output video feed
-		image_sub_ = it_.subscribe("/camera/rgb/image_rect_color", 1,
+		image_sub_ = it_.subscribe("/zed/rgb/image_rect_color", 1,
 		&ImageConverter::imageCb, this);
+		std::cout << "hello" << std::endl;
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& msg) {
