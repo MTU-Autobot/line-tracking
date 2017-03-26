@@ -19,18 +19,13 @@
 using namespace cv;
 using namespace std;
 
-//Setting up the ROS messanger tags
-string point_cloud_frame_id = "";
-ros::Time point_cloud_time;
+//string point_cloud_frame_id = "";
+//ros::Time point_cloud_time;
 
-//The end task flag (may not be used)
+//Task kill flag
 static volatile int keepRunning = 1;
-
-//Scaling Values for the pixels to meters
-static volatile double xscale = 0.003787727;
-static volatile double yscale = 0.00419224;
-static volatile double yOffset = 0.17;
-static volatile double xOffset = 0.7366;
+//static volatile double xscale = 0.003787727;
+//static volatile double yscale = 0.00419224;
 
 //Initialize the Mats needed for calculations
 static Mat frame;
@@ -62,9 +57,6 @@ class ImageConverter {
 	image_transport::ImageTransport it_;
 	image_transport::Subscriber image_sub_;
 	cv_bridge::CvImagePtr cv_ptr;
-	
-	//Publisher initialization
-	ros::Publisher pub_cloud = nh_.advertise<sensor_msgs::PointCloud2> ("lines", 1);
 
 public:
 	//Subscribe to the ROS topic
@@ -87,10 +79,7 @@ public:
 			ROS_ERROR("cv_bridge exception: %s", e.what());
 			return;
 		}
-
-		//Get the file with HSV values and inport them
-		std::fstream HSVfile("LineTrackingFiles/HSV.txt", std::ios_base::in);
-		HSVfile >> H_MIN >> H_MAX >> S_MIN >> S_MAX >> V_MIN >> V_MAX;
+		
 
 		//Get the current frame
 		frame = cv_ptr->image;
@@ -125,14 +114,10 @@ public:
 		warpPerspective(frame, output, lambda, output.size());
 
 		//*Discovery Phase*//
-		
-		//Color filtering
-		//Convert the input to an HSV image
+		//Convert the frame to different kinds of Mats
 		cvtColor(output, HSV, COLOR_BGR2HSV);
-		//Filter the image color by the input numbers from earlier
 		inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshld);
 		inRange(HSV, Scalar(0, 0, 0), Scalar(0, 0, 0), Hough);
-		//Call the fuction to remove erronious color patches
 		morphOps(threshld);
 
 		//Detect Edges
@@ -145,61 +130,50 @@ public:
 		HoughLinesP(Can, lines, 1, CV_PI/180, 50, 20, 10);
 
 		//*Data conversion phase*//
-		//Initialize PointCloud
-		pcl::PointCloud<pcl::PointXYZRGB> point_cloud;
-		point_cloud.width = 1280;
-		point_cloud.height = 720;
-		int size = 1280*720;
-		point_cloud.points.resize(size);
-
 		int index = 0;
 		//For all points
 		for (size_t i = 0; i < lines.size(); i++) {
 			//Convert take one point out of the array
 			Vec4i l = lines[i];
 			line(ctv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, CV_AA);
-
-			//Calculate distances
-			double p0 = ((yscale) * ((l[0]) - 320)) + yOffset;
-			double p1 = (xscale * (480 - (l[1]))) + xOffset;
-			double p2 = ((yscale) * ((l[2]) - 320)) + yOffset;
-			double p3 = (xscale * (480 - (l[3]))) + xOffset;
-
-			//Add points to the point cloud
-			point_cloud.points[index].y = p1;
-			point_cloud.points[index].z = 5.0;
-			point_cloud.points[index].x = p0;
-			index++;
-			point_cloud.points[index].y = p3;
-			point_cloud.points[index].z = 5.0;
-			point_cloud.points[index].x = p2;
-
-			//Print the points to the screen
-			cout << p1 << " " << p0 << endl;
-			cout << p3 << " " << p2 << endl;
 		}
-		//Space things out
-		cout << endl;
 		
-		//Show the monitoring window
-		namedWindow( "Line Tracking", WINDOW_NORMAL );// Create a window for display.
+		//*Show Phase*//
+		//Make and populate the windows that show the Mats
+		namedWindow( "Input Image", WINDOW_NORMAL );
+		imshow("Input Image", frame);
+		waitKey(25);
+			
+		namedWindow( "Color Filtering", WINDOW_NORMAL );
+		imshow("Color Filtering", threshld);
+		waitKey(25);
+			
+		namedWindow( "Line Tracking", WINDOW_NORMAL );
 		imshow("Line Tracking", ctv);
 		waitKey(25);
-
-		//*ROS Send Phase*//
-		//Define the message
-		sensor_msgs::PointCloud2 output;
-		//Convert the point cloud to a ROS point cloud
-		pcl::toROSMsg(point_cloud, output);
-		//Fill out the details of the ROS message
-		output.header.frame_id = point_cloud_frame_id; 
-		output.header.stamp = point_cloud_time;
-		output.height = 1280;
-		output.width = 720;
-		output.is_bigendian = false;
-		output.is_dense = false;
-		//Publish the point cloud
-		pub_cloud.publish(output);
+		
+		//Initialize the sliders
+		char HMINSlide[50];
+		char HMAXSlide[50];
+		char SMINSlide[50];
+		char SMAXSlide[50];
+		char VMINSlide[50];
+		char VMAXSlide[50];
+		sprintf( HMINSlide, "H_MIN");
+		sprintf( HMAXSlide, "H_MAX");
+		sprintf( SMINSlide, "S_MIN");
+		sprintf( SMAXSlide, "S_MAX");
+		sprintf( VMINSlide, "V_MIN");
+		sprintf( VMAXSlide, "V_MAX");
+ 
+		//Open a window for the sliders and populate
+		namedWindow( "Calibration", WINDOW_NORMAL );
+		createTrackbar( HMINSlide, "Calibration", &H_MIN, 255);
+		createTrackbar( HMAXSlide, "Calibration", &H_MAX, 255);
+		createTrackbar( SMINSlide, "Calibration", &S_MIN, 255);
+		createTrackbar( SMAXSlide, "Calibration", &S_MAX, 255);
+		createTrackbar( VMINSlide, "Calibration", &V_MIN, 255);
+		createTrackbar( VMAXSlide, "Calibration", &V_MAX, 255);
 	}
 
 	void morphOps(Mat &thresh) {
@@ -225,58 +199,26 @@ public:
 };
 
 int main(int argc, char** argv) {
-	//Define the message handeler
+	//Get the file with HSV values and inport them
+	std::fstream HSVfile("LineTrackingFiles/HSV.txt", std::ios_base::in);
+	HSVfile >> H_MIN >> H_MAX >> S_MIN >> S_MAX >> V_MIN >> V_MAX;
+	HSVfile.close();
+	
+	//Initialize signal handeler
 	signal(SIGINT, intHandler);
 	
-	//Initialize the topic
+	//Initialize topic
 	ros::init(argc, argv, "image_converter");
 	ImageConverter ic;
 
-	//ROS Spin until we get a cntr+c
+	//Spin until cntr+c
 	ros::spin();
 	
-	//*Log Save Phase*//
-	//Save all the images to files
-	cout << "Saving images..." << endl;
-	imwrite("LineTrackingFiles/frame.jpg", frame);
-	imwrite("LineTrackingFiles/HSV.jpg", HSV);
-	imwrite("LineTrackingFiles/threshld.jpg", threshld);
-	imwrite("LineTrackingFiles/hough.jpg", ctv);
-	imwrite("LineTrackingFiles/output.jpg", output);
-	imwrite("LineTrackingFiles/can.jpg", Can);
-
-	//Save text files of all of the points
-	cout << "Saving points..." << endl;
-
-	//Start the files
-	ofstream pixels;
-	ofstream points;
-	pixels.open("LineTrackingFiles/pixel.txt");
-	points.open("LineTrackingFiles/point.txt");
-
-	//Run through the points and save them to a file
-	for (size_t i = 0; i < lines.size(); i++) {
-		//Get points for the array
-		Vec4i l = lines[i];
-		line(ctv, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, CV_AA);
-
-		//Convert to meters
-		double p0 = ((yscale) * ((l[0]) - 320)) + yOffset;
-		double p1 = (xscale * (480 - (l[1]))) + xOffset;
-		double p2 = ((yscale) * ((l[2]) - 320)) + yOffset;
-		double p3 = (xscale * (480 - (l[3]))) + xOffset;
-
-		//Save the points to a file
-		pixels << l[1] << " , " << l[0] << "\r\n";
-		points << p1 << " , " << p0 << "\r\n";
-		pixels << l[3] << " , " << l[2] << "\r\n";
-		points << p3 << " , " << p2 << "\r\n";
-	}
-
-	//Close the files
-	pixels.close();
-	points.close();
-
+	//When the exit signal comes, save the HSV values to the file
+	ofstream HSVfiles;
+	HSVfiles.open("LineTrackingFiles/HSV.txt");
+	HSVfiles << H_MIN << " " << H_MAX << " " << S_MIN << " " << S_MAX << " " << V_MIN << " " << V_MAX;
+			
 	//End the program
 	return 0;
 }

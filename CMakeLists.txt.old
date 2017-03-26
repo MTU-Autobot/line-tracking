@@ -34,7 +34,7 @@ find_package(PCL REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-  LIBRARIES line_tracking line_calibration
+  LIBRARIES line_tracking
   CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
@@ -58,9 +58,7 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ executable
 add_executable(line_tracking src/line_tracking.cpp)
-add_executable(line_calibration src/line_calibration.cpp)
 set_target_properties(line_tracking PROPERTIES OUTPUT_NAME line_tracking)
-set_target_properties(line_calibration PROPERTIES OUTPUT_NAME line_calibration)
 
 
 ## Add cmake target dependencies of the executable
@@ -69,9 +67,6 @@ set_target_properties(line_calibration PROPERTIES OUTPUT_NAME line_calibration)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(line_tracking
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(line_calibration
   ${catkin_LIBRARIES}
 )
 
@@ -92,11 +87,6 @@ target_link_libraries(line_calibration
 
 ## Mark executables and/or libraries for installation
 install(TARGETS line_tracking
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-install(TARGETS line_calibration
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
